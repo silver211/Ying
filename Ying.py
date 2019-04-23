@@ -8,8 +8,6 @@ from mutagen.id3 import ID3
 from tkinter import *
 import time
 import tkinter.messagebox as messagebox
-#import sysconfig
-# import pyglet
 
 def browse_file():
     global is_paused
@@ -31,7 +29,6 @@ def browse_file():
         realname=audio['TIT2'].text[0]
     else:
         realname="Unkown Title"
-    global listbox
     listbox.insert(END,realname)
     realnames.append(realname)
     length.append(MP3(realdir).info.length)
@@ -48,16 +45,14 @@ def directorychooser():
     global is_muted
     global index
     temp_realnames=[]
+    temp_filelist=[]
     directory=askdirectory()
     if not directory:
         return
-    if not listofsongs:
-        pygame.mixer.init()
-        is_paused=True
-        is_muted=False
     os.chdir(directory)
     for files in os.listdir(directory):
         if files.endswith('.mp3'):
+            '''
             realdir=os.path.realpath(files)
             audio=ID3(realdir)
             if audio['TIT2']:
@@ -66,7 +61,24 @@ def directorychooser():
                 temp_realnames.append('Unkown Title')
             listofsongs.append(files)
             length.append(MP3(realdir).info.length)
+            '''
+            temp_filelist.append(files)
    # global listbox
+    if not temp_filelist:
+      return
+    if not listofsongs:
+        pygame.mixer.init()
+        is_paused=True
+        is_muted=False
+    for files in temp_filelist:
+      realdir = os.path.realpath(files)
+      audio = ID3(realdir)
+      if audio['TIT2']:
+        temp_realnames.append(audio['TIT2'].text[0])
+      else:
+        temp_realnames.append('Unkown Title')
+      listofsongs.append(files)
+      length.append(MP3(realdir).info.length)
     for name in temp_realnames:
         listbox.insert(END, name)
         realnames.append(name)
@@ -228,8 +240,10 @@ def show_detail(index):
     timeformat = '{:02d}:{:02d}'.format(mins, secs)
     lengthlabel['text'] = timeformat
     currentlabel['text']='00:00'
+
     t1=threading.Thread(target=time_count,args=(total_length,))
     t1.start()
+
 
 def time_count(total_length):
     global is_paused
@@ -247,6 +261,7 @@ def time_count(total_length):
             current_length+=1
     if current_length>total_length:
         songlabel['text']=realnames[index]+'-finished'
+    sys.exit()
 
 root=Tk()
 root.title('Ying!')
